@@ -6,11 +6,12 @@ export default defineComponent({
   props: {
     title: {
       type: String,
-      default: 'title'
+      required: true,
     },
 
     images: {
-      type: String
+      type: String,
+      required: true,
     }
   },
 
