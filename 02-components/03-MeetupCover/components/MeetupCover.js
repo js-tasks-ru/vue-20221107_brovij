@@ -9,7 +9,7 @@ export default defineComponent({
       required: true,
     },
 
-    images: {
+    image: {
       type: String,
       required: true,
     }
