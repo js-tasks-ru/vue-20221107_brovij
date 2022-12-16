@@ -1,30 +1,109 @@
 <template>
-  <div class="dropdown dropdown_opened">
-    <button type="button" class="dropdown__toggle dropdown__toggle_icon">
-      <ui-icon icon="tv" class="dropdown__icon" />
-      <span>Title</span>
+  <div class="dropdown" :class="{ dropdown_opened: dropdownOpened }">
+    <button
+      type="button"
+      class="dropdown__toggle"
+      :class="{ dropdown__toggle_icon: hasAnyIcon }"
+      @click="dropdownClick"
+    >
+      <ui-icon 
+        v-if="selectedOption && selectedOption.icon" 
+        :icon="selectedOption.icon" class="dropdown__icon" 
+      />
+
+      <span>{{ (selectedOption && selectedOption.text) || title }}</span>
     </button>
 
-    <div class="dropdown__menu" role="listbox">
-      <button class="dropdown__item dropdown__item_icon" role="option" type="button">
-        <ui-icon icon="tv" class="dropdown__icon" />
-        Option 1
-      </button>
-      <button class="dropdown__item dropdown__item_icon" role="option" type="button">
-        <ui-icon icon="tv" class="dropdown__icon" />
-        Option 2
+    <div v-show="dropdownOpened" class="dropdown__menu" role="listbox">
+      <button
+        v-for="option in options"
+        class="dropdown__item"
+        :class="{ dropdown__item_icon: hasAnyIcon }"
+        role="option"
+        type="button"
+        :value="option.value"
+        @click="optionClick"
+      >
+        <ui-icon 
+          v-if="option.icon" 
+          :icon="option.icon" 
+          class="dropdown__icon" 
+        />
+
+        {{ option.text }}
       </button>
     </div>
   </div>
+
+  <select v-show="false" :value="modelValue" @change="selectChange">
+    
+    <option 
+      v-for="option in options" 
+      :key="option.value" 
+      :value="option.value"
+    >
+        {{ option.text }}
+    </option>
+    
+  </select>
 </template>
 
 <script>
-import UiIcon from './UiIcon';
+import UiIcon from './UiIcon'
 
 export default {
   name: 'UiDropdown',
 
-  components: { UiIcon },
+  components: { 
+    UiIcon
+  },
+
+  props: {
+    options: {
+      type: Array,
+      required: true,
+    },
+
+    title: {
+      type: String,
+      required: true,
+    },
+
+    modelValue: {
+      type: String,
+    },
+  },
+
+  emits: ['update:modelValue'],
+
+  data() {
+    return { dropdownOpened: false }
+  },
+
+  computed: {
+    hasAnyIcon() {
+      return this.options.some((item) => item.icon)
+    },
+
+    selectedOption() {
+      return this.modelValue && this.options.find((item) => item.value === this.modelValue)
+    },
+  },
+
+  methods: {
+    dropdownClick() {
+      this.dropdownOpened = !this.dropdownOpened
+    },
+
+    optionClick(event) {
+      this.$emit('update:modelValue', event.target.value)
+      this.dropdownOpened = false;
+    },
+
+    selectChange(event) {
+      this.$emit('update:modelValue', event.target.value)
+    },
+  },
 };
 </script>
 
@@ -33,7 +112,6 @@ export default {
   position: relative;
   display: inline-block;
 }
-
 .dropdown__toggle {
   display: inline-block;
   background-color: var(--white);
@@ -54,57 +132,55 @@ export default {
   cursor: pointer;
   text-decoration: none;
 }
-
 .dropdown__toggle:after {
   content: '';
   position: absolute;
   top: 15px;
   right: 16px;
   transform: none;
-  background: url('@/assets/icons/icon-chevron-down.svg') no-repeat;
+  background: url('~@/assets/icons/icon-chevron-down.svg') no-repeat;
   background-size: cover;
   display: block;
   width: 24px;
   height: 24px;
   transition: 0.2s transform;
 }
-
-.dropdown__toggle_icon {
+.dropdown__toggle.dropdown__toggle_icon {
   padding-left: 56px;
 }
-
 .dropdown_opened .dropdown__toggle {
   border-color: var(--blue);
   border-bottom-color: transparent;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
-
 .dropdown_opened .dropdown__toggle:after {
   transform: rotate(180deg);
 }
-
 .dropdown__menu {
-  background-clip: padding-box;
+  margin: 0;
+  width: 100%;
+  padding: 0;
   border-radius: 0 0 8px 8px;
+  left: 0;
+  z-index: 95;
+  background-clip: padding-box;
+  display: none;
+  flex-direction: column;
   border: 2px solid var(--blue);
   border-top: none;
-  bottom: auto;
-  display: flex;
-  flex-direction: column;
-  left: 0;
-  margin: 0;
   overflow: hidden;
-  padding: 0;
-  position: absolute;
-  right: auto;
-  top: -1px;
-  transform: translate3d(0px, 52px, 0px);
-  width: 100%;
-  will-change: transform;
-  z-index: 95;
 }
-
+.dropdown_opened .dropdown__menu {
+  display: flex;
+  position: absolute;
+  transform: translate3d(0px, 52px, 0px);
+  top: -1px;
+  left: 0;
+  will-change: transform;
+  right: auto;
+  bottom: auto;
+}
 .dropdown__item {
   padding: 8px 16px;
   font-weight: 500;
@@ -120,18 +196,15 @@ export default {
   outline: none;
   text-decoration: none;
 }
-
 .dropdown__item:hover,
 .dropdown__item:focus {
   background-color: var(--grey-light);
 }
-
-.dropdown__item_icon {
+.dropdown__item.dropdown__item_icon {
   padding-left: 56px;
   position: relative;
 }
-
-.dropdown__item_icon .dropdown__icon,
+.dropdown__item.dropdown__item_icon .dropdown__icon,
 .dropdown__toggle_icon .dropdown__icon {
   position: absolute;
   top: 50%;
