@@ -2,92 +2,109 @@
   <div class="image-uploader">
     <label
       class="image-uploader__preview"
-      :class="{ 'image-uploader__preview-loading': state === 'loading' }"
-      :style="{ '--bg-url': `url(${preview})` }"
+      :class="{ 'image-uploader__preview-loading': state == $options.AllStates.loading }"
+      :style="previewImg && `--bg-url: url('${previewImg}')`"
     >
-      <span class="image-uploader__text">{{ text }}</span>
+
+      <span class="image-uploader__text">{{ stateText }}</span>
+
       <input
         ref="input"
-        v-bind="$attrs"
         type="file"
         accept="image/*"
         class="image-uploader__input"
-        @change="handleChange"
-        @click="handleClick"
+        v-bind="$attrs"
+        @change="fileSelect"
+        @click="click"
       />
     </label>
   </div>
 </template>
 
 <script>
+const AllStates = {
+  empty: 'empty',
+  loading: 'loading',
+  loaded: 'loaded'
+}
+
 export default {
   name: 'UiImageUploader',
 
   inheritAttrs: false,
+  AllStates,
 
   props: {
-    preview: {
-      type: String
-    },
-    uploader: {
-      type: Function
-    }
+    preview: String,
+    uploader: Function
   },
 
-  emits: ['upload', 'remove', 'select', 'error'],
+  emits: ['select', 'upload', 'error', 'remove'],
 
   data() {
     return {
-      LOADING_TEXT: 'Загрузка...',
-      EMPTY_TEXT: 'Загрузить изображение',
-      DELETE_TEXT: 'Удалить изображение',
-      loading: false,
-      state: this.preview ? 'uploaded' : 'empty',
+      state: this.preview ? AllStates.loaded : AllStates.empty,
+      selectedImage: null
     }
   },
 
   computed: {
-    text() {
-      switch (this.state) {
-        case 'empty':
-          return this.EMPTY_TEXT
-        case 'loading':
-          return this.LOADING_TEXT
+    stateText() {
+      switch(this.state) {
+        case AllStates.loading:
+          return 'Загрузка...'
+        case AllStates.loaded:
+          return 'Удалить изображение'
         default:
-          return this.DELETE_TEXT
+          return 'Загрузить изображение'
       }
-    }
+    },
+
+    previewImg() { return this.selectedImage || this.preview }
   },
 
   methods: {
-    handleClick($event) {
-      if (this.state === 'uploaded') $event.preventDefault(), this.handleClear()
-    },
+    fileSelect(event) {
+      let file = this.$refs["input"].files[0]
 
-    handleChange() {
-      this.state = 'loading'
-
-      const file = new File(this.$refs?.input?.files, 'newFile')
+      this.selectedImage = URL.createObjectURL(file)
+      this.$emit('select', file)
+      this.state = AllStates.loading
 
       if (this.uploader) {
-        this.uploader(file)
-          .then((res) => { this.$emit('upload', res) })
-
-          .then( () => { this.state = 'uploaded' },
-
-          (err) => { this.$emit('error', err); this.state = 'empty' })
+        return this.uploader(file)
+          .then((result) => {
+            this.state = AllStates.loaded
+            this.$emit('upload', result)
+          })
+          .catch((error) => {
+            this.state = AllStates.empty
+            this.removeFile()
+            this.$emit('error', error)
+          })
+          .finally(() => {
+            this.selectedImage = null
+          })
       } else {
-        this.state = 'uploaded'
+        this.state = AllStates.loaded
+        return
       }
-
-      this.$emit('select', this.$refs?.input?.files[0])
-      this.$refs.input.value = null
     },
 
-    handleClear() {
-      this.$refs['input'].value = null
-      this.$emit('remove')
-      this.state = 'empty'
+    click(event) {
+      if (this.state == AllStates.loading) {
+        event.preventDefault()
+      } else if (this.state == AllStates.loaded) {
+        event.preventDefault()
+        this.removeFile()
+        this.state = AllStates.empty
+        this.$emit('remove')
+      }
+    },
+
+    removeFile() {
+      this.selectedImage = null
+      this.$refs["input"].value = ''
     }
   }
 };
@@ -96,12 +113,10 @@ export default {
 <style scoped>
 .image-uploader {
 }
-
 .image-uploader__input {
   opacity: 0;
   height: 0;
 }
-
 .image-uploader__preview {
   --bg-url: var(--default-cover);
   background-size: cover;
@@ -118,7 +133,6 @@ export default {
   max-width: 512px;
   height: 228px;
 }
-
 .image-uploader__text {
   color: var(--white);
   font-family: 'Nunito', sans-serif;
@@ -126,11 +140,9 @@ export default {
   font-size: 20px;
   line-height: 28px;
 }
-
 .image-uploader__preview:hover {
   border-color: var(--blue);
 }
-
 .image-uploader__preview.image-uploader__preview-loading {
   cursor: no-drop;
 }
