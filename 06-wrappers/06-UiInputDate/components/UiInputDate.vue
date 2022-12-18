@@ -1,75 +1,57 @@
 <template>
-  <ui-input ref="input" v-model="modelValueProxy" :type="type">
+  <ui-input :type="type" :modelValue="formattedDateTime" v-bind="$attrs" @change="onChange">
+
     <template v-for="slotName in Object.keys($slots)" #[slotName]>
       <slot :name="slotName" />
     </template>
+
   </ui-input>
 </template>
 
 <script>
 import UiInput from './UiInput';
+import moment from 'moment';
 
 export default {
   name: 'UiInputDate',
 
   components: { UiInput },
 
+  inheritAttrs: false,
+
   props: {
     type: {
       type: String,
       default: 'date'
     },
+    
     modelValue: {
-      type: [String, Number],
+      type: Number,
       default: null
     }
   },
 
-  computed: {
-    modelValueProxy: {
-      get() {
-        return this.modelValue ? this.formatDate(this.modelValue, this.type) : null
-      },
+  emits: ['update:modelValue'],
 
-      set(value) {
-        value = value ? this.$refs['input'].$refs['input'].valueAsNumber : null
-        this.$emit('update:modelValue', value)
+  computed: {
+    formattedDateTime() {
+      const utcDate = moment(this.modelValue).utc()
+
+      switch (this.type) {
+        case 'time':
+          return utcDate.format('HH:mm')
+        case 'datetime-local':
+          return utcDate.format('YYYY-MM-DDTHH:mm')
+        default:
+          return utcDate.format('YYYY-MM-DD')
       }
     }
   },
 
   methods: {
-    formatDate(date, type) {
-      let d = new Date(date)
-      d = new Date(date + d.getTimezoneOffset() * 60 * 1000)
-
-      let month = (d.getMonth() + 1).toString()
-      let day = d.getDate().toString()
-      let year = d.getFullYear()
-      let hours = d.getHours().toString()
-      let minutes = d.getMinutes().toString()
-      let seconds = d.getSeconds().toString()
-
-      if (month.length < 2) month = '0' + month
-      if (hours.length < 2) hours = '0' + hours
-      if (minutes.length < 2) minutes = '0' + minutes
-      if (seconds.length < 2) seconds = '0' + seconds
-      if (day.length < 2) day = '0' + day
-
-      switch (type) {
-        case 'date':
-          return [year, month, day].join('-')
-          break
-        case 'time':
-          return [hours, minutes].join(':')
-          break
-        case 'datetime-local':
-          return [year, month, day].join('-') + 'T' + [hours, minutes].join(':')
-          break
-      }
-      
-      return null
-    },
-  },
+    onChange($event) {
+      this.$emit('update:modelValue', $event.target.valueAsNumber)
+    }
+  }
 };
 </script>
