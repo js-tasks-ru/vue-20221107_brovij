@@ -14,7 +14,7 @@
 </template>
 
 <script>
-let lastId = 0;
+let lastId = 0
 
 export default {
   name: 'MiniMessenger',
@@ -22,28 +22,31 @@ export default {
   data() {
     return {
       newMessage: '',
+
       messages: [
         { id: lastId++, text: 'First message' },
         { id: lastId++, text: 'Second message' },
         { id: lastId++, text: 'Third message' },
         { id: lastId++, text: 'Forth message' },
-      ],
-    };
+      ]
+    }
   },
 
   methods: {
     handleSendSubmit() {
-      this.send();
+      this.send()
+
+      this.$nextTick(() => {
+        this.$refs.items[this.messages.length - 1].scrollIntoView()
+      });
     },
 
     send() {
-      this.messages.push({
-        id: lastId++,
-        text: this.newMessage,
-      });
-      this.newMessage = '';
-    },
-  },
+      this.messages.push({ id: lastId++, text: this.newMessage })
+
+      this.newMessage = ''
+    }
+  }
 };
 </script>
 
@@ -53,7 +56,6 @@ export default {
   width: 250px;
   background-color: var(--white);
 }
-
 .messages {
   padding: 0 1rem;
   margin: 0;
@@ -61,7 +63,6 @@ export default {
   height: 300px;
   overflow: auto;
 }
-
 .message {
   background-color: var(--grey);
   margin: 1rem 0 1rem auto;
@@ -69,7 +70,6 @@ export default {
   width: 80%;
   word-break: break-all;
 }
-
 .messenger__input {
   border-left: none;
   border-right: none;

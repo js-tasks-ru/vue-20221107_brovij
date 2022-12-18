@@ -17,34 +17,33 @@ export default {
 
   data() {
     return {
-      sensors: null,
-    };
+      sensors: null
+    }
   },
 
   mounted() {
-    this.sensorsDataController = new SensorsDataController(new SensorsDataStreamingService());
-    this.sensorsDataController.addDataCallback(this.callback);
-
+    this.sensorsDataController = new SensorsDataController(new SensorsDataStreamingService())
+    this.sensorsDataController.addDataCallback(this.callback)
     // Раз в секунду запрашиваем и выводим новые данные сенсоров
     setInterval(() => {
-      this.sensorsDataController.getData();
-    }, 1000);
+      this.sensorsDataController.getData()
+    }, 1000)
   },
 
   beforeUnmount() {
-    this.sensorsDataController.removeDataCallback(this.callback);
-    this.sensorsDataController.close();
+    this.sensorsDataController.removeDataCallback(this.callback)
+    this.sensorsDataController.close()
   },
 
   methods: {
     callback(data) {
-      this.setData(data);
+      this.setData(data)
     },
 
     setData(sensors) {
-      this.sensors = sensors;
-    },
-  },
+      this.sensors = JSON.parse(JSON.stringify(sensors))
+    }
+  }
 };
 </script>
 
