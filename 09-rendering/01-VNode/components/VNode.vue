@@ -3,13 +3,17 @@ import { isVNode } from 'vue';
 
 export default {
   name: 'VNode',
-
+  
   props: {
     vnode: {
       type: [Object, Array],
       require: true,
-      validator: (value) => (Array.isArray(value) ? value.every((item) => isVNode(item)) : isVNode(value)),
-    },
+      validator: (vnodes) => (Array.isArray(vnodes) ? vnodes : [vnodes]).every((mustBeVNode) => isVNode(mustBeVNode))
+    }
   },
+
+  setup(props) {
+    return () => props.vnode
+  }
 };
 </script>
