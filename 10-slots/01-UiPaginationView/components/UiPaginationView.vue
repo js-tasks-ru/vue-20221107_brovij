@@ -1,7 +1,9 @@
 <template>
+
   <div class="pagination-container">
-    <!-- Контент страницы -->
+    <slot v-for="item in pageItems" :key="item.id" :item="item" />
   </div>
+
 </template>
 
 <script>
@@ -12,18 +14,28 @@ export default {
     page: {
       type: Number,
       required: true,
-      validator: (value) => value > 0,
+      validator: (value) => value > 0
     },
+
     perPage: {
       type: Number,
       required: true,
-      validator: (value) => value > 0,
+      validator: (value) => value > 0
     },
+
     items: {
       type: Array,
-      required: true,
-    },
+      required: true
+    }
   },
+
+  computed: {
+    pageItems() {
+      const currentIndex = (this.page - 1) * this.perPage
+      
+      return this.items.slice(currentIndex, currentIndex + this.perPage)
+    }
+  }
 };
 </script>
 
