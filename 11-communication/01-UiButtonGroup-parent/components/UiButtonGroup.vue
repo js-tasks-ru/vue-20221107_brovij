@@ -10,6 +10,8 @@
 export default {
   name: 'UiButtonGroup',
 
+  expose: ['setValue', 'modelValue'],
+
   props: {
     modelValue: {
       required: true
